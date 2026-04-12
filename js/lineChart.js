@@ -1,40 +1,67 @@
+/**
+ * Line Chart
+ * 
+ * Displays global population growth trend over time from 1970-2022.
+ * Shows historical baseline that contextualizes climate burden increases.
+ * Interactive points display year and population on hover.
+ */
+
 import { bindInteractiveSelection, createChartTransition } from "./chartUtils.js";
 
 export default class LineChart {
+  /**
+   * Initializes the population trend line chart with SVG structure and scales.
+   */
   constructor({ selector, dispatcher }) {
+    // Query DOM container and store event dispatcher reference
     this.root = d3.select(selector);
     this.dispatcher = dispatcher;
 
+    // Reserve space for axes and labels
     this.margin = { top: 20, right: 26, bottom: 52, left: 82 };
-    this.transition = createChartTransition();
-
+    
+    // Create SVG container with responsive viewBox
     this.svg = this.root.append("svg").attr("class", "chart-svg").attr("role", "img");
     this.plot = this.svg.append("g");
 
+    // Create grid and axis groups
     this.gridY = this.plot.append("g").attr("class", "grid grid-y");
     this.xAxisG = this.plot.append("g").attr("class", "axis axis-x");
     this.yAxisG = this.plot.append("g").attr("class", "axis axis-y");
 
+    // Create axis labels
     this.xLabel = this.svg.append("text").attr("class", "axis-label").attr("text-anchor", "middle");
     this.yLabel = this.svg.append("text").attr("class", "axis-label").attr("text-anchor", "middle");
 
+    // Create line path and interactive point layer
     this.lineLayer = this.plot.append("path").attr("class", "line-path");
     this.pointLayer = this.plot.append("g");
     this.emptyLabel = this.plot.append("text").attr("class", "empty-state").attr("opacity", 0);
 
+    // Initialize D3 scales (domains set during update)
     this.x = d3.scaleLinear();
     this.y = d3.scaleLinear();
 
+    // Track state (line chart doesn't use selection state)
     this.state = {};
 
+    // Re-render on window resize for responsive behavior
     window.addEventListener("resize", () => {
       if (this.lastData) this.update(this.lastData, this.state);
     });
   }
 
+  /**
+   * Full render cycle when data changes.
+   * Draws smooth line with monotone X curve for natural progression.
+   */
   update(data, state) {
+    // Cache data and state for resize handling
     this.lastData = data;
     this.state = { ...state };
+    
+    // Create fresh transition for this update cycle
+    const transition = createChartTransition();
 
     const chartData = [...data]
       .filter((d) => Number.isFinite(d.year) && Number.isFinite(d.globalPopulationMillions))
@@ -79,9 +106,9 @@ export default class LineChart {
       .tickSize(-innerWidth)
       .tickFormat("");
 
-    this.xAxisG.transition(this.transition).call(xAxis);
-    this.yAxisG.transition(this.transition).call(yAxis);
-    this.gridY.transition(this.transition).call(yGrid);
+    this.xAxisG.transition(transition).call(xAxis);
+    this.yAxisG.transition(transition).call(yAxis);
+    this.gridY.transition(transition).call(yGrid);
 
     const lineGenerator = d3
       .line()
@@ -89,13 +116,13 @@ export default class LineChart {
       .x((d) => this.x(d.year))
       .y((d) => this.y(d.globalPopulationMillions));
 
-    this.lineLayer.datum(chartData).transition(this.transition).attr("d", lineGenerator);
+    this.lineLayer.datum(chartData).transition(transition).attr("d", lineGenerator);
 
     const points = this.pointLayer.selectAll("circle.line-point").data(chartData, (d) => d.year);
 
     points
       .exit()
-      .transition(this.transition)
+      .transition(transition)
       .attr("r", 0)
       .remove();
 
@@ -112,27 +139,45 @@ export default class LineChart {
     });
 
     mergedPoints
-      .transition(this.transition)
+      .transition(transition)
       .attr("cx", (d) => this.x(d.year))
       .attr("cy", (d) => this.y(d.globalPopulationMillions))
       .attr("r", 4.3);
   }
 
   setInteractionState(state) {
+    // Update state with new interaction state
     this.state = { ...state };
   }
 
+  /**
+   * Dispatches hover event when user mouses over a trend point.
+   * Shows tooltip with year and global population.
+   */
   onHover(event, d) {
+    // Dispatch hover event to parent component
     this.dispatcher.call("trendHover", null, { event, datum: d, chart: "line" });
   }
 
+  /**
+   * Dispatches leave event when mouse exits trend points.
+   * Removes tooltip.
+   */
   onLeave() {
+    // Dispatch leave event to parent component
     this.dispatcher.call("trendOut", null, { chart: "line" });
   }
 
+  /**
+   * Shows empty state message when no data available.
+   * Clears line and points, displays centered text.
+   */
   renderEmpty(innerWidth, innerHeight) {
+    // Clear line and points
     this.lineLayer.attr("d", null);
-    this.pointLayer.selectAll("circle.line-point").remove();
+    this.pointLayer.selectAll("*").remove();
+    
+    // Display empty state message
     this.emptyLabel
       .attr("x", innerWidth / 2)
       .attr("y", innerHeight / 2)
@@ -140,12 +185,20 @@ export default class LineChart {
       .text("No trend data available");
   }
 
+  /**
+   * Computes responsive dimensions using fixed height to prevent expansion.
+   * Using fixed height instead of bounds.height prevents chart from growing on interactions.
+   */
   getDimensions() {
+    // Get bounding box of container for width only
     const bounds = this.root.node().getBoundingClientRect();
-    const width = Math.max(320, bounds.width || 700);
-    const height = Math.max(350, bounds.height || 350);
+    
+    // Use responsive width but fixed height to prevent vertical expansion
+    const width = Math.max(520, bounds.width || 840);
+    const height = 450; // Fixed height prevents expansion bug
     const innerWidth = width - this.margin.left - this.margin.right;
     const innerHeight = height - this.margin.top - this.margin.bottom;
+
     return { width, height, innerWidth, innerHeight };
   }
 }
