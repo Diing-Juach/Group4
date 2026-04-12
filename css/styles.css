@@ -907,3 +907,36 @@ h3 {
   .chart-large {
     min-height: 360px;
   }
+
+  .tooltip {
+    min-width: 180px;
+  }
+
+  .intro-meta {
+    width: calc(100vw - 24px);
+    bottom: 14px;
+    padding: 10px;
+    border-radius: 24px;
+    grid-template-columns: 1fr;
+  }
+
+  .status-pill,
+  .reset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
