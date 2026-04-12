@@ -143,3 +143,85 @@
           </div>
         </section>
 
+         <section class="card story-chapter section-fingerprint" id="chapter-fingerprint" data-chapter="Fingerprint">
+          <div class="section-heading">
+            <p class="chapter-kicker">Chapter 4</p>
+            <h2>Which countries show the strongest climate fingerprint?</h2>
+            <p>
+              This heatmap condenses six burden indicators into a single matrix, making it easier to compare
+              countries across multiple dimensions at once rather than jumping between separate charts.
+            </p>
+          </div>
+          <p class="section-note">
+            Each column is normalized against the full country set, so darker cells mark stronger relative intensity.
+          </p>
+          <div id="heatmap-chart" class="chart-container chart-heatmap"></div>
+        </section>
+
+        <section class="card story-chapter section-rank-shift" id="chapter-rank-shift" data-chapter="Rank Shift">
+          <div class="section-heading">
+            <p class="chapter-kicker">Chapter 5</p>
+            <h2>Which countries move up the burden ranking?</h2>
+            <p>
+              This slope chart compares each country's population rank with its affected-population rank. It adds a
+              more distinctive visual layer to the story by highlighting disproportionate burden, not just absolute
+              size.
+            </p>
+          </div>
+          <p class="section-note">
+            Positive shifts mean a country climbs higher in climate impact than its population rank would suggest.
+          </p>
+          <div id="rank-shift-chart" class="chart-container chart-rank"></div>
+        </section>
+
+        <section class="card story-chapter section-regional" id="chapter-regional" data-chapter="Regions">
+          <div class="section-heading">
+            <p class="chapter-kicker">Chapter 6</p>
+            <h2>Regional filters reveal where total burden concentrates</h2>
+            <p>
+              The region chart introduces the project's higher-level structure. Clicking a region filters all
+              country-level charts, making the story coherent across scales.
+            </p>
+          </div>
+          <div id="region-chart" class="chart-container chart-medium"></div>
+        </section>
+
+        <section class="card story-chapter section-insight" id="chapter-reflection" data-chapter="Reflection">
+          <div class="reflection-grid">
+            <div>
+              <div class="section-heading">
+                <p class="chapter-kicker">Chapter 7</p>
+                <h2>So what does the story suggest?</h2>
+                <p>
+                  The dynamic narrative below updates with your current selection so the page always explains the
+                  insight behind the filter instead of leaving interpretation entirely to the reader.
+                </p>
+              </div>
+              <p id="dynamic-insight" class="dynamic-insight" aria-live="polite"></p>
+            </div>
+
+            <aside class="callout-panel">
+              <h3>Final takeaway</h3>
+              <p id="story-callout">
+                Climate burden is not explained by population size alone. Comparing totals, event counts, region
+                filters, and rank shifts helps reveal where vulnerability is concentrated and where a country climbs
+                the burden ranking unexpectedly.
+              </p>
+              <ul class="callout-list">
+                <li>Use the slope chart to find disproportionate burden.</li>
+                <li>Use the region filter to isolate where that burden clusters.</li>
+                <li>Use the scatter plot and rankings together to compare scale against intensity.</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
+    <div id="app-alert" class="sr-only" role="alert"></div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
+
