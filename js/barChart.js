@@ -1,41 +1,66 @@
+/**
+ * Population Bar Chart
+ * 
+ * Displays top 10 countries ranked by total population.
+ * Horizontal bars with inline value labels for easy comparison.
+ * Supports hover and click interactions for country selection.
+ */
+
 import { bindInteractiveSelection, createChartTransition, formatOneDecimal } from "./chartUtils.js";
 
 export default class PopulationBarChart {
+  /**
+   * Initializes the population ranking chart with SVG structure and scales.
+   */
   constructor({ selector, dispatcher }) {
-    // Linked horizontal bar chart for top countries by population.
+    // Query DOM container and store event dispatcher reference
     this.root = d3.select(selector);
     this.dispatcher = dispatcher;
 
+    // Reserve space for axis labels and ticks
     this.margin = { top: 22, right: 20, bottom: 52, left: 120 };
-    this.transition = createChartTransition();
 
+    // Create SVG container with responsive viewBox
     this.svg = this.root.append("svg").attr("class", "chart-svg").attr("role", "img");
     this.plot = this.svg.append("g");
 
+    // Create grid and axis groups
     this.gridX = this.plot.append("g").attr("class", "grid grid-x");
     this.xAxisG = this.plot.append("g").attr("class", "axis axis-x");
     this.yAxisG = this.plot.append("g").attr("class", "axis axis-y");
 
+    // Create axis label for x-axis
     this.xLabel = this.svg.append("text").attr("class", "axis-label").attr("text-anchor", "middle");
 
+    // Create layers for bars and inline value labels
     this.barLayer = this.plot.append("g");
     this.labelLayer = this.plot.append("g");
     this.emptyLabel = this.plot.append("text").attr("class", "empty-state").attr("opacity", 0);
 
+    // Initialize D3 scales (domains set during update)
     this.x = d3.scaleLinear();
     this.y = d3.scaleBand().padding(0.24);
 
+    // Track interaction state for highlighting
     this.state = { selectedCountry: null, hoveredCountry: null };
 
+    // Re-render on window resize for responsive behavior
     window.addEventListener("resize", () => {
       if (this.lastData) this.update(this.lastData, this.state);
     });
   }
 
+  /**
+   * Full render cycle when data or interaction state changes.
+   * Shows top 10 countries sorted by population descending.
+   */
   update(data, state) {
-    // Render/update top-10 bars with transitions whenever global filter changes.
+    // Cache data and state for resize handling
     this.lastData = data;
     this.state = { ...state };
+    
+    // Create fresh transition for this update cycle
+    const transition = createChartTransition();
 
     const chartData = [...data]
       .sort((a, b) => d3.descending(a.populationMillions, b.populationMillions))
@@ -77,15 +102,15 @@ export default class PopulationBarChart {
       .tickSize(-innerHeight)
       .tickFormat("");
 
-    this.gridX.attr("transform", `translate(0, ${innerHeight})`).transition(this.transition).call(xGrid);
-    this.xAxisG.transition(this.transition).call(xAxis);
-    this.yAxisG.transition(this.transition).call(yAxis);
+    this.gridX.attr("transform", `translate(0, ${innerHeight})`).transition(transition).call(xGrid);
+    this.xAxisG.transition(transition).call(xAxis);
+    this.yAxisG.transition(transition).call(yAxis);
 
     const bars = this.barLayer.selectAll("rect.bar-rect").data(chartData, (d) => d.country);
 
     bars
       .exit()
-      .transition(this.transition)
+      .transition(transition)
       .attr("width", 0)
       .style("opacity", 0)
       .remove();
@@ -109,7 +134,7 @@ export default class PopulationBarChart {
     });
 
     mergedBars
-      .transition(this.transition)
+      .transition(transition)
       .attr("y", (d) => this.y(d.country))
       .attr("height", this.y.bandwidth())
       .attr("width", (d) => this.x(d.populationMillions));
@@ -123,7 +148,7 @@ export default class PopulationBarChart {
       .append("text")
       .attr("class", "bar-value-label")
       .merge(labels)
-      .transition(this.transition)
+      .transition(transition)
       .attr("x", (d) => this.x(d.populationMillions) + 8)
       .attr("y", (d) => (this.y(d.country) || 0) + this.y.bandwidth() / 2 + 4)
       .text((d) => formatOneDecimal(d.populationMillions));
@@ -146,39 +171,67 @@ export default class PopulationBarChart {
       .classed(
         "dimmed",
         (d) =>
+          // Dim all bars except the focused country
           (Boolean(focusCountry) && d.country !== focusCountry) ||
+          // Dim all bars except the focused region if no country is focused
           (!focusCountry && Boolean(focusRegion) && d.region !== focusRegion)
       );
   }
 
+  /**
+   * Dispatches hover event when user mouses over a bar.
+   * Shows tooltip and highlights the country across all charts.
+   */
   onHover(event, d) {
     this.dispatcher.call("countryHover", null, { event, datum: d, country: d.country, chart: "populationBar" });
   }
 
+  /**
+   * Dispatches leave event when mouse exits bar elements.
+   * Removes tooltip and clears temporary highlights.
+   */
   onLeave() {
     this.dispatcher.call("countryOut", null, { chart: "populationBar" });
   }
 
+  /**
+   * Dispatches click event to select/deselect a country.
+   * Toggles sticky selection and filters all country charts.
+   */
   onClick(event, d) {
     this.dispatcher.call("countryClick", null, { event, datum: d, country: d.country, chart: "populationBar" });
   }
 
+  /**
+   * Shows empty state message when no data matches current filter.
+   * Clears bars and labels, displays centered text.
+   */
   renderEmpty(innerWidth, innerHeight) {
-    this.barLayer.selectAll("rect.bar-rect").remove();
-    this.labelLayer.selectAll("text.bar-value-label").remove();
+    // Remove all elements from bar and label layers
+    this.barLayer.selectAll("*").remove();
+    this.labelLayer.selectAll("*").remove();
+    // Display empty state message
     this.emptyLabel
       .attr("x", innerWidth / 2)
       .attr("y", innerHeight / 2)
       .attr("opacity", 1)
-      .text("No countries available for this filter");
+      .text("No population data available for this selection");
   }
 
+  /**
+   * Computes responsive dimensions from container bounding box.
+   * Returns width, height, and inner dimensions after subtracting margins.
+   */
   getDimensions() {
+    // Get bounding box of container element
     const bounds = this.root.node().getBoundingClientRect();
-    const width = Math.max(320, bounds.width || 430);
-    const height = Math.max(360, bounds.height || 360);
+    // Set minimum width and height
+    const width = Math.max(520, bounds.width || 840);
+    const height = Math.max(420, bounds.height || 520);
+    // Calculate inner dimensions by subtracting margins
     const innerWidth = width - this.margin.left - this.margin.right;
     const innerHeight = height - this.margin.top - this.margin.bottom;
+
     return { width, height, innerWidth, innerHeight };
   }
 }
