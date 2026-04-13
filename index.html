@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="./css/styles.css" />
     <!-- D3.js v7 library for data visualization -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- TopoJSON library for geographic data conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
   </head>
   <body>
     <!-- Skip link for keyboard accessibility -->
@@ -36,32 +38,36 @@
       </header>
 
       <nav class="story-nav card" aria-label="Story chapters">
-        <a href="#chapter-baseline" class="story-link is-active" data-chapter-link="chapter-baseline">
+        <a href="#chapter-overview" class="story-link is-active" data-chapter-link="chapter-overview">
           <span class="story-link-index">01</span>
+          <span class="story-link-label">Overview</span>
+        </a>
+        <a href="#chapter-baseline" class="story-link" data-chapter-link="chapter-baseline">
+          <span class="story-link-index">02</span>
           <span class="story-link-label">Baseline</span>
         </a>
         <a href="#chapter-relationship" class="story-link" data-chapter-link="chapter-relationship">
-          <span class="story-link-index">02</span>
+          <span class="story-link-index">03</span>
           <span class="story-link-label">Relationship</span>
         </a>
         <a href="#chapter-comparison" class="story-link" data-chapter-link="chapter-comparison">
-          <span class="story-link-index">03</span>
+          <span class="story-link-index">04</span>
           <span class="story-link-label">Comparison</span>
         </a>
         <a href="#chapter-fingerprint" class="story-link" data-chapter-link="chapter-fingerprint">
-          <span class="story-link-index">04</span>
+          <span class="story-link-index">05</span>
           <span class="story-link-label">Fingerprint</span>
         </a>
         <a href="#chapter-rank-shift" class="story-link" data-chapter-link="chapter-rank-shift">
-          <span class="story-link-index">05</span>
+          <span class="story-link-index">06</span>
           <span class="story-link-label">Rank Shift</span>
         </a>
         <a href="#chapter-regional" class="story-link" data-chapter-link="chapter-regional">
-          <span class="story-link-index">06</span>
+          <span class="story-link-index">07</span>
           <span class="story-link-label">Regions</span>
         </a>
         <a href="#chapter-reflection" class="story-link" data-chapter-link="chapter-reflection">
-          <span class="story-link-index">07</span>
+          <span class="story-link-index">08</span>
           <span class="story-link-label">Reflection</span>
         </a>
       </nav>
@@ -98,9 +104,9 @@
         </article>
 
         <article class="card kpi-card">
-          <p class="kpi-label">Most exposed country</p>
+          <p class="kpi-label">Most exposed country (by region)</p>
           <p id="kpi-exposed" class="kpi-value">Loading</p>
-          <p class="kpi-note">Highest affected-to-population ratio shows disproportionate climate burden relative to country size.</p>
+          <p class="kpi-note">Highest affected-to-population ratio globally, or within selected region if filtered.</p>
         </article>
 
         <article class="card kpi-card">
@@ -117,9 +123,23 @@
       </section>
 
       <main id="main-story" class="story-grid">
-        <section class="card story-chapter section-time-trend" id="chapter-baseline" data-chapter="Baseline">
+        <section class="card story-chapter section-map-overview" id="chapter-overview" data-chapter="Overview">
           <div class="section-heading">
             <p class="chapter-kicker">Chapter 1</p>
+            <h2>Climate risk is distributed unevenly across the globe</h2>
+            <p>
+              The world map shows average climate risk score by country, revealing geographic patterns of vulnerability.
+              Darker colors indicate higher climate risk based on factors including temperature change, extreme events, 
+              and environmental hazards.
+            </p>
+          </div>
+          <p class="section-note">Hover over countries to see detailed metrics. Click to filter other charts.</p>
+          <div id="map-chart" class="chart-container chart-map"></div>
+        </section>
+
+        <section class="card story-chapter section-time-trend" id="chapter-baseline" data-chapter="Baseline">
+          <div class="section-heading">
+            <p class="chapter-kicker">Chapter 2</p>
             <h2>Global population growth raises the baseline of exposure</h2>
             <p>
               The population dataset provides the long-run context for the story. As total population increases,
@@ -131,7 +151,7 @@
 
         <section class="card story-chapter section-main-insight" id="chapter-relationship" data-chapter="Relationship">
           <div class="section-heading">
-            <p class="chapter-kicker">Chapter 2</p>
+            <p class="chapter-kicker">Chapter 3</p>
             <h2>Population size and climate burden move together, but not evenly</h2>
             <p>
               The core relationship chart compares 2022 population with total affected population. Bubble size adds a
@@ -144,7 +164,7 @@
 
         <section class="card story-chapter section-comparison" id="chapter-comparison" data-chapter="Comparison">
           <div class="section-heading">
-            <p class="chapter-kicker">Chapter 3</p>
+            <p class="chapter-kicker">Chapter 4</p>
             <h2>Ranking the countries exposes different types of vulnerability</h2>
             <p>
               These linked rankings show how the same selection can surface different stories depending on whether
@@ -167,7 +187,7 @@
 
         <section class="card story-chapter section-fingerprint" id="chapter-fingerprint" data-chapter="Fingerprint">
           <div class="section-heading">
-            <p class="chapter-kicker">Chapter 4</p>
+            <p class="chapter-kicker">Chapter 5</p>
             <h2>Which countries show the strongest climate fingerprint?</h2>
             <p>
               This heatmap condenses six burden indicators into a single matrix, making it easier to compare
@@ -182,7 +202,7 @@
 
         <section class="card story-chapter section-rank-shift" id="chapter-rank-shift" data-chapter="Rank Shift">
           <div class="section-heading">
-            <p class="chapter-kicker">Chapter 5</p>
+            <p class="chapter-kicker">Chapter 6</p>
             <h2>Which countries move up the burden ranking?</h2>
             <p>
               This slope chart compares each country's population rank with its affected-population rank. It adds a
@@ -198,7 +218,7 @@
 
         <section class="card story-chapter section-regional" id="chapter-regional" data-chapter="Regions">
           <div class="section-heading">
-            <p class="chapter-kicker">Chapter 6</p>
+            <p class="chapter-kicker">Chapter 7</p>
             <h2>Regional filters reveal where total burden concentrates</h2>
             <p>
               The region chart introduces the project's higher-level structure. Clicking a region filters all
@@ -212,7 +232,7 @@
           <div class="reflection-grid">
             <div>
               <div class="section-heading">
-                <p class="chapter-kicker">Chapter 7</p>
+                <p class="chapter-kicker">Chapter 8</p>
                 <h2>So what does the story suggest?</h2>
                 <p>
                   The dynamic narrative below updates with your current selection so the page always explains the
@@ -242,6 +262,15 @@
 
     <div id="tooltip" class="tooltip" role="status" aria-live="polite"></div>
     <div id="app-alert" class="sr-only" role="alert"></div>
+
+    <!-- Floating Dynamic Insight Panel: Appears next to clicked charts -->
+    <aside id="insight-panel" class="insight-panel card hidden" aria-live="polite" aria-atomic="true">
+      <div class="insight-header">
+        <h3 class="insight-title">📊 Country Analysis</h3>
+        <button id="close-insight" class="close-insight-btn" type="button" aria-label="Close insight panel">×</button>
+      </div>
+      <p id="insight-content" class="insight-content"></p>
+    </aside>
 
     <script type="module" src="./js/main.js"></script>
   </body>
