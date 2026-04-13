@@ -1,3 +1,17 @@
+/**
+ * Rank Shift Chart (Slope Chart)
+ * 
+ * Compares each country's rank by population vs. rank by affected population.
+ * Lines slope up/down to show disproportionate climate burden relative to country size.
+ * This reveals which countries face outsized impacts despite smaller populations.
+ * 
+ * Visual encoding:
+ * - Left axis: Population rank (1 = highest population)
+ * - Right axis: Impact rank (1 = most affected)
+ * - Line slope: Shows if burden is proportional, higher, or lower than expected
+ * - Delta labels: Numeric change in rank position
+ */
+
 import {
   bindInteractiveSelection,
   CONTINENT_COLORS,
@@ -7,20 +21,27 @@ import {
 } from "./chartUtils.js";
 
 export default class RankShiftChart {
+  /**
+   * Initializes the rank shift slope chart with two-column layout.
+   */
   constructor({ selector, dispatcher }) {
+    // Query DOM container and store event dispatcher reference
     this.root = d3.select(selector);
     this.dispatcher = dispatcher;
 
+    // Wide side margins to accommodate rank numbers and country labels
     this.margin = { top: 72, right: 168, bottom: 36, left: 168 };
-    this.transition = createChartTransition();
-
+    
+    // Create SVG container
     this.svg = this.root.append("svg").attr("class", "chart-svg");
     this.plot = this.svg.append("g");
 
+    // Create header and link layers
     this.headerLayer = this.svg.append("g").attr("class", "rank-header-layer");
     this.linkLayer = this.plot.append("g").attr("class", "rank-link-layer");
     this.emptyLabel = this.plot.append("text").attr("class", "empty-state").attr("opacity", 0);
 
+    // Create column headers for left and right axes
     this.leftHeader = this.headerLayer
       .append("text")
       .attr("class", "rank-axis-heading")
@@ -51,6 +72,7 @@ export default class RankShiftChart {
   update(data, state) {
     this.lastData = data;
     this.state = { ...state };
+    const transition = createChartTransition();
 
     const chartData = [...data]
       .filter((row) => Number.isFinite(row.populationRank) && Number.isFinite(row.affectedRank))
@@ -130,7 +152,7 @@ export default class RankShiftChart {
       group
         .select("line.rank-link")
         .attr("stroke", color)
-        .transition(this.transition)
+        .transition(transition)
         .attr("x1", leftX)
         .attr("y1", leftY)
         .attr("x2", rightX)
@@ -139,7 +161,7 @@ export default class RankShiftChart {
       group
         .select("circle.rank-node-left")
         .attr("fill", color)
-        .transition(this.transition)
+        .transition(transition)
         .attr("cx", leftX)
         .attr("cy", leftY)
         .attr("r", 8);
@@ -147,35 +169,35 @@ export default class RankShiftChart {
       group
         .select("circle.rank-node-right")
         .attr("fill", color)
-        .transition(this.transition)
+        .transition(transition)
         .attr("cx", rightX)
         .attr("cy", rightY)
         .attr("r", 8);
 
       group
         .select("text.rank-country-left")
-        .transition(this.transition)
+        .transition(transition)
         .attr("x", leftX - 18)
         .attr("y", leftY + 4)
         .text(row.country);
 
       group
         .select("text.rank-country-right")
-        .transition(this.transition)
+        .transition(transition)
         .attr("x", rightX + 18)
         .attr("y", rightY + 4)
         .text(row.country);
 
       group
         .select("text.rank-rank-left")
-        .transition(this.transition)
+        .transition(transition)
         .attr("x", leftX)
         .attr("y", leftY + 4)
         .text(formatInteger(row.populationRank));
 
       group
         .select("text.rank-rank-right")
-        .transition(this.transition)
+        .transition(transition)
         .attr("x", rightX)
         .attr("y", rightY + 4)
         .text(formatInteger(row.affectedRank));
@@ -184,7 +206,7 @@ export default class RankShiftChart {
         .select("text.rank-delta")
         .classed("positive", (row.rankChange ?? 0) > 0)
         .classed("negative", (row.rankChange ?? 0) < 0)
-        .transition(this.transition)
+        .transition(transition)
         .attr("x", innerWidth / 2)
         .attr("y", (leftY + rightY) / 2 - 8)
         .text(this.getDeltaLabel(row.rankChange));
@@ -213,6 +235,10 @@ export default class RankShiftChart {
       );
   }
 
+  /**
+   * Dispatches hover event when user mouses over a slope line.
+   * Shows tooltip with rank change narrative explaining disproportionate burden.
+   */
   onHover(event, datum) {
     this.dispatcher.call("countryHover", null, {
       event,
@@ -223,14 +249,26 @@ export default class RankShiftChart {
     });
   }
 
+  /**
+   * Dispatches leave event when mouse exits slope lines.
+   * Removes tooltip and clears temporary highlights.
+   */
   onLeave() {
     this.dispatcher.call("countryOut", null, { chart: "rankShift" });
   }
 
+  /**
+   * Dispatches click event to select/deselect a country.
+   * Toggles sticky selection and filters all country charts.
+   */
   onClick(event, datum) {
     this.dispatcher.call("countryClick", null, { event, datum, country: datum.country, chart: "rankShift" });
   }
 
+  /**
+   * Shows empty state message when no rank shift data available.
+   * Clears all slope lines and displays centered text.
+   */
   renderEmpty(innerWidth, innerHeight) {
     this.linkLayer.selectAll("g.rank-row").remove();
     this.emptyLabel
@@ -240,6 +278,10 @@ export default class RankShiftChart {
       .text("No rank-shift comparison available");
   }
 
+  /**
+   * Formats rank change as a delta label with + or - prefix.
+   * Used to display numeric change in the center of each slope line.
+   */
   getDeltaLabel(rankChange) {
     if (!Number.isFinite(rankChange) || rankChange === 0) {
       return "0";
@@ -256,7 +298,7 @@ export default class RankShiftChart {
   getDimensions() {
     const bounds = this.root.node().getBoundingClientRect();
     const width = Math.max(860, bounds.width || 860);
-    const height = Math.max(430, bounds.height || 430);
+    const height = 550; // Fixed height prevents chart expansion on interactions
     const innerWidth = width - this.margin.left - this.margin.right;
     const innerHeight = height - this.margin.top - this.margin.bottom;
 

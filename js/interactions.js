@@ -1,20 +1,48 @@
-import { describeRankShift, formatInteger, formatOneDecimal } from "./chartUtils.js";
+/**
+ * Interaction Controller
+ * 
+ * Centralized event handling and state management for all chart interactions.
+ * Implements bidirectional filtering, linked highlighting, tooltip management,
+ * and dynamic narrative text generation based on user selections.
+ * 
+ * Key Features:
+ * - Hover and click event coordination across all charts
+ * - Country ↔ Region bidirectional filtering
+ * - Automatic region highlighting when country is selected
+ * - Dynamic KPI updates reflecting current focus
+ * - Context-aware tooltip positioning and content
+ * - Narrative text that adapts to filter state
+ * 
+ * State Management:
+ * - selectedCountry/Region: Active filters that trigger full data re-render
+ * - hoveredCountry/Region: Temporary highlights without data filtering
+ * - linkedRegion: Auto-derived region for the focused country
+ */
 
+import { describeRankShift, formatInteger, formatOneDecimal, formatBillion } from "./chartUtils.js";
+
+// Initial interaction state before any user input
 export const initialState = {
-  selectedCountry: null,
-  hoveredCountry: null,
-  selectedRegion: null,
-  hoveredRegion: null,
-  linkedRegion: null,
+  selectedCountry: null,   // Sticky selection from click
+  hoveredCountry: null,    // Temporary highlight from hover
+  selectedRegion: null,    // Sticky region filter from click
+  hoveredRegion: null,     // Temporary region highlight from hover
+  linkedRegion: null,      // Auto-derived region when country is selected
 };
 
+/**
+ * Filters country data based on current selection state.
+ * Applies region filter first, then country filter for drill-down behavior.
+ */
 export function getFilteredCountryData(allData, state) {
   let filtered = [...allData.countryComparison];
 
+  // Apply region filter if a region is selected
   if (state.selectedRegion) {
     filtered = filtered.filter((row) => row.region === state.selectedRegion);
   }
 
+  // Further filter to single country if selected
   if (state.selectedCountry) {
     filtered = filtered.filter((row) => row.country === state.selectedCountry);
   }
@@ -22,20 +50,161 @@ export function getFilteredCountryData(allData, state) {
   return filtered;
 }
 
+/**
+ * Resolves the currently focused country from selection or hover state.
+ * Selection takes priority over hover.
+ */
 function getCurrentFocusCountry(allData, state) {
   const countryName = state.selectedCountry || state.hoveredCountry;
   return countryName ? allData.countryLookup.get(countryName) || null : null;
 }
 
+/**
+ * Resolves the currently focused region from selection, hover, or linked state.
+ * Checks selection first, then hover, then auto-linked region from country.
+ */
 function getCurrentFocusRegion(allData, state) {
   const regionName = state.selectedRegion || state.hoveredRegion || state.linkedRegion;
   return regionName ? allData.regionLookup.get(regionName) || null : null;
 }
 
+/**
+ * Formats affected-to-population ratio as a multiplier string (e.g., "2.50x").
+ */
 function formatRatio(value) {
   return Number.isFinite(value) ? `${value.toFixed(2)}x` : "N/A";
 }
 
+/**
+ * Generates intelligent insights for a selected region.
+ * Analyzes regional characteristics and top countries within the region.
+ * 
+ * @param {Object} region - The selected region data
+ * @param {Object} allData - Complete dataset for comparative analysis
+ * @returns {string} Human-readable insight text with regional findings
+ */
+function generateRegionInsight(region, allData) {
+  if (!region) return "";
+
+  // Get all countries in this region
+  const countriesInRegion = allData.countryComparison.filter(c => c.region === region.region);
+  const regionSize = countriesInRegion.length;
+
+  // Calculate regional statistics
+  const totalEvents = d3.sum(countriesInRegion, c => c.extremeEvents) || 0;
+  const avgRisk = d3.mean(countriesInRegion, c => c.avgClimateRiskScore) || 0;
+  const totalPopulation = d3.sum(countriesInRegion, c => c.populationMillions) || 0;
+
+  // Find top country by affected population
+  const topCountry = [...countriesInRegion].sort((a, b) => 
+    d3.descending(a.affectedMillions || 0, b.affectedMillions || 0)
+  )[0];
+
+  // Find most vulnerable (highest affected share)
+  const mostVulnerable = [...countriesInRegion].sort((a, b) => 
+    d3.descending(a.affectedShare || 0, b.affectedShare || 0)
+  )[0];
+
+  // Compare to global averages
+  const globalAvgRisk = d3.mean(allData.countryComparison, c => c.avgClimateRiskScore) || 0;
+  const riskLevel = avgRisk > globalAvgRisk ? "elevated" : "moderate";
+  const riskComparison = avgRisk > globalAvgRisk 
+    ? `${((avgRisk / globalAvgRisk - 1) * 100).toFixed(0)}% above global average`
+    : `${((1 - avgRisk / globalAvgRisk) * 100).toFixed(0)}% below global average`;
+
+  // Build insight narrative
+  const insights = [];
+  
+  insights.push(`<strong>${region.region}</strong> encompasses ${regionSize} countries with a combined population of ${formatBillion(totalPopulation)}`);
+  insights.push(`records ${formatInteger(totalEvents)} extreme events affecting ${formatOneDecimal(region.totalPopulationAffectedMillions)} million people`);
+  insights.push(`shows ${riskLevel} regional climate risk (score: ${formatOneDecimal(avgRisk)}, ${riskComparison})`);
+
+  let keyFinding = "";
+  if (topCountry) {
+    const share = ((topCountry.affectedMillions / region.totalPopulationAffectedMillions) * 100).toFixed(0);
+    keyFinding = ` <strong>${topCountry.country}</strong> accounts for ${share}% of the region's affected population (${formatOneDecimal(topCountry.affectedMillions)} million).`;
+  }
+
+  if (mostVulnerable && mostVulnerable.country !== topCountry?.country) {
+    keyFinding += ` However, <strong>${mostVulnerable.country}</strong> shows the highest vulnerability with ${formatRatio(mostVulnerable.affectedShare)} of its population affected.`;
+  }
+
+  return insights.join(", ") + "." + keyFinding;
+}
+
+/**
+ * Generates intelligent, comparative insights for a selected country.
+ * Analyzes the country's metrics against dataset averages to provide contextual analysis.
+ * 
+ * @param {Object} country - The selected country data
+ * @param {Object} allData - Complete dataset for comparative analysis
+ * @returns {string} Human-readable insight text with key findings
+ */
+function generateCountryInsight(country, allData) {
+  if (!country) return "";
+
+  // Calculate dataset averages for comparison
+  const avgEvents = d3.mean(allData.countryComparison, d => d.extremeEvents) || 0;
+  const avgAffected = d3.mean(allData.countryComparison, d => d.affectedMillions) || 0;
+  const avgRisk = d3.mean(allData.countryComparison, d => d.avgClimateRiskScore) || 0;
+  const avgPopulation = d3.mean(allData.countryComparison, d => d.populationMillions) || 0;
+
+  // Determine country's characteristics relative to averages
+  const hasHighEvents = country.extremeEvents > avgEvents;
+  const hasHighImpact = country.affectedMillions > avgAffected;
+  const hasHighRisk = country.avgClimateRiskScore > avgRisk;
+  const hasHighPopulation = country.populationMillions > avgPopulation;
+  const hasPositiveRankShift = (country.rankChange || 0) > 0;
+
+  // Build insight components
+  const insights = [];
+
+  // Population context
+  const populationContext = hasHighPopulation 
+    ? `<strong>${country.country}</strong> has a large population of ${formatBillion(country.populationMillions)}`
+    : `<strong>${country.country}</strong> has a moderate population of ${formatBillion(country.populationMillions)}`;
+  
+  insights.push(populationContext);
+
+  // Event frequency analysis
+  const eventComparison = hasHighEvents
+    ? `experiences ${formatInteger(country.extremeEvents)} extreme events (above the ${formatInteger(avgEvents)} average)`
+    : `records ${formatInteger(country.extremeEvents)} extreme events (below the ${formatInteger(avgEvents)} average)`;
+  
+  insights.push(eventComparison);
+
+  // Impact analysis
+  if (hasHighImpact) {
+    const impactRatio = (country.affectedMillions / avgAffected).toFixed(1);
+    insights.push(`faces high human impact with ${formatOneDecimal(country.affectedMillions)} million people affected (${impactRatio}x the average)`);
+  } else {
+    insights.push(`has ${formatOneDecimal(country.affectedMillions)} million people affected`);
+  }
+
+  // Climate risk assessment
+  const riskLevel = hasHighRisk ? "elevated" : "moderate";
+  insights.push(`shows ${riskLevel} climate risk (score: ${formatOneDecimal(country.avgClimateRiskScore)})`);
+
+  // Vulnerability driver analysis
+  let driverAnalysis = "";
+  if (hasHighImpact && !hasHighEvents) {
+    driverAnalysis = " Vulnerability appears driven more by <strong>population density and exposure</strong> than event frequency.";
+  } else if (hasHighEvents && hasHighImpact) {
+    driverAnalysis = " The combination of <strong>frequent events and high population exposure</strong> creates compounding vulnerability.";
+  } else if (hasPositiveRankShift) {
+    driverAnalysis = ` Despite ${hasHighPopulation ? 'its large population' : 'moderate population size'}, it climbs <strong>${Math.abs(country.rankChange)} places</strong> in climate impact ranking, revealing disproportionate burden.`;
+  } else if (country.rankChange < 0) {
+    driverAnalysis = ` Its climate burden is <strong>proportional to population size</strong>, moving ${Math.abs(country.rankChange)} places down in relative impact rank.`;
+  }
+
+  // Combine all insights into a coherent narrative
+  return insights.join(", ") + "." + driverAnalysis;
+}
+
+/**
+ * Generates dynamic narrative text based on current selection or defaults to global summary.
+ * Used to update the story callout panel with context-aware insights.
+ */
 function buildCallout(allData, state) {
   const focusCountry = getCurrentFocusCountry(allData, state);
   const focusRegion = getCurrentFocusRegion(allData, state);
@@ -141,22 +310,48 @@ function updateKpis({ allData, currentData, state, kpiNodes }) {
   if (kpiNodes.shift) {
     if (focusCountry) {
       kpiNodes.shift.textContent = describeRankShift(focusCountry.rankChange);
-      return;
-    }
+    } else {
+      const scopedCountryData = focusRegion
+        ? allData.countryComparison.filter((row) => row.region === focusRegion.region)
+        : currentData;
 
+      const rankLeader = focusRegion
+        ? [...scopedCountryData].sort((a, b) => d3.descending(a.rankChange ?? -Infinity, b.rankChange ?? -Infinity))[0]
+        : allData.storySummary.biggestRankSurge;
+
+      if (rankLeader) {
+        kpiNodes.shift.textContent = `${rankLeader.country} - ${describeRankShift(rankLeader.rankChange)}`;
+      } else {
+        kpiNodes.shift.textContent = "No shift data";
+      }
+    }
+  }
+
+  if (kpiNodes.exposed) {
+    // Always show most exposed country (global or within region), not the selected country
     const scopedCountryData = focusRegion
       ? allData.countryComparison.filter((row) => row.region === focusRegion.region)
-      : currentData;
+      : allData.countryComparison;
 
-    const rankLeader = focusRegion
-      ? [...scopedCountryData].sort((a, b) => d3.descending(a.rankChange ?? -Infinity, b.rankChange ?? -Infinity))[0]
-      : allData.storySummary.biggestRankSurge;
+    const mostExposed = focusRegion
+      ? [...scopedCountryData].sort((a, b) => d3.descending(a.affectedShare ?? -Infinity, b.affectedShare ?? -Infinity))[0]
+      : allData.storySummary.mostExposedCountry;
 
-    if (rankLeader) {
-      kpiNodes.shift.textContent = `${rankLeader.country} - ${describeRankShift(rankLeader.rankChange)}`;
+    if (mostExposed) {
+      kpiNodes.exposed.textContent = `${mostExposed.country} - ${formatRatio(mostExposed.affectedShare ?? 0)}`;
     } else {
-      kpiNodes.shift.textContent = "No shift data";
+      kpiNodes.exposed.textContent = "No exposure data";
     }
+  }
+
+  if (kpiNodes.totalAffected) {
+    const totalAffected = d3.sum(currentData, (d) => d.affectedMillions ?? 0);
+    kpiNodes.totalAffected.textContent = `${formatOneDecimal(totalAffected)} million`;
+  }
+
+  if (kpiNodes.avgRisk) {
+    const avgRisk = d3.mean(currentData, (d) => d.avgClimateRiskScore) ?? 0;
+    kpiNodes.avgRisk.textContent = formatOneDecimal(avgRisk);
   }
 }
 
@@ -171,6 +366,58 @@ export function wireInteractions({
   storyCalloutNode,
   kpiNodes,
 }) {
+  // Query insight panel DOM elements
+  const insightPanel = document.getElementById("insight-panel");
+  const insightContent = document.getElementById("insight-content");
+  const closeInsightBtn = document.getElementById("close-insight");
+
+  /**
+   * Shows the dynamic insight panel with country-specific analysis.
+   * Panel appears as floating overlay in top-right corner without scrolling.
+   */
+  const showInsightPanel = (country) => {
+    if (!insightPanel || !insightContent || !country) return;
+    
+    const insight = generateCountryInsight(country, allData);
+    const insightTitle = document.querySelector(".insight-title");
+    if (insightTitle) {
+      insightTitle.textContent = "📊 Country Analysis";
+    }
+    insightContent.innerHTML = insight;
+    insightPanel.classList.remove("hidden");
+  };
+
+  /**
+   * Shows the dynamic insight panel with region-specific analysis.
+   */
+  const showRegionInsightPanel = (region) => {
+    if (!insightPanel || !insightContent || !region) return;
+    
+    const insight = generateRegionInsight(region, allData);
+    const insightTitle = document.querySelector(".insight-title");
+    if (insightTitle) {
+      insightTitle.textContent = "🌍 Regional Analysis";
+    }
+    insightContent.innerHTML = insight;
+    insightPanel.classList.remove("hidden");
+  };
+
+  /**
+   * Hides the dynamic insight panel.
+   */
+  const hideInsightPanel = () => {
+    if (!insightPanel) return;
+    insightPanel.classList.add("hidden");
+  };
+
+  // Wire up close button
+  if (closeInsightBtn) {
+    closeInsightBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hideInsightPanel();
+    });
+  }
+
   const renderHighlightsOnly = () => {
     // Hover states should feel instant, so we avoid full data rerenders unless a filter actually changes.
     charts.countryCharts.forEach((chart) => chart.setInteractionState(state));
@@ -209,7 +456,7 @@ export function wireInteractions({
       .html(
         `<div class="name">${datum.country}</div>
          <div>Region: ${datum.region}</div>
-         <div>Population: ${formatOneDecimal(datum.populationMillions)} million</div>
+         <div>Population: ${formatBillion(datum.populationMillions)}</div>
          <div>People affected: ${formatOneDecimal(datum.affectedMillions)} million</div>
          <div>Extreme events: ${formatInteger(datum.extremeEvents)}</div>
          <div>Climate risk: ${formatOneDecimal(datum.avgClimateRiskScore ?? 0)}</div>
@@ -246,8 +493,8 @@ export function wireInteractions({
 
     tooltip
       .html(
-        `<div class="name">Year ${formatInteger(datum.year)}</div>
-         <div>Global population: ${formatOneDecimal(datum.globalPopulationMillions)} million</div>`
+        `<div class="name">Year ${Math.round(datum.year)}</div>
+         <div>Global population: ${formatBillion(datum.globalPopulationMillions)}</div>`
       )
       .classed("visible", true);
 
@@ -317,6 +564,14 @@ export function wireInteractions({
     syncLinkedRegionFromCountryState();
     hideTooltip();
     applyFilterAndRender();
+    
+    // Show/hide insight panel based on selection
+    if (nextCountry) {
+      const countryData = allData.countryLookup.get(nextCountry);
+      showInsightPanel(countryData);
+    } else {
+      hideInsightPanel();
+    }
   });
 
   dispatcher.on("regionHover.interactions", (payload) => {
@@ -348,6 +603,14 @@ export function wireInteractions({
     syncLinkedRegionFromCountryState();
     hideTooltip();
     applyFilterAndRender();
+    
+    // Show/hide region insight panel based on selection
+    if (nextRegion) {
+      const regionData = allData.regionLookup.get(nextRegion);
+      showRegionInsightPanel(regionData);
+    } else {
+      hideInsightPanel();
+    }
   });
 
   dispatcher.on("trendHover.interactions", (payload) => {
@@ -365,6 +628,7 @@ export function wireInteractions({
     state.hoveredRegion = null;
     state.linkedRegion = null;
     hideTooltip();
+    hideInsightPanel();
     applyFilterAndRender();
   };
 
