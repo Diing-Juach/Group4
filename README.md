@@ -17,37 +17,14 @@ The page is organised as a guided narrative with 8 chapters:
 7. **Regional Aggregation**: Continental summaries with bidirectional filtering
 8. **Reflection**: Dynamic insights and key takeaways
 
-This keeps the application within the coursework requirement of a **single HTML page** while delivering a coherent data-driven story.
-
 ## How To Run
 
-**IMPORTANT - Extract the zip first!**
+**Extract the zip**
 1. **Extract the entire zip file** to a folder (e.g., Desktop or Documents)
 2. **Navigate INTO the extracted folder** (you should see `index.html`, `run_app.bat`, `css/`, `js/`, `data/` folders)
-
-**Method 1: Windows batch file (Recommended)**
-
-1. **Double-click `run_app.bat`** in the project folder
-2. The browser should open automatically to `http://127.0.0.1:8000/`
-3. If it doesn't open automatically, manually navigate to: `http://127.0.0.1:8000/`
-
-**Method 2: Python command (Any OS)**
-
-1. **Open terminal/command prompt**
-2. **Navigate to the project folder** where `index.html` is located:
-   ```bash
-   cd path/to/extracted/folder
-   ```
-3. **Start the server**:
-   ```bash
-   python -m http.server 8000
-   ```
-4. **Open browser** and go to: `http://127.0.0.1:8000/`
-
-**Troubleshooting:**
-- **404 Error?** You're running the server from the wrong directory! Make sure you're IN the folder with `index.html`
-- **Can't find `index.html`?** Navigate to `http://127.0.0.1:8000/` (without `/index.html`) and you should see a file listing
-- **Working correctly?** You should see the dashboard title and world map
+3. **Double-click `run_app.bat`** in the project folder.
+The browser should open automatically to `http://127.0.0.1:8000/`
+If it doesn't open automatically, manually navigate to: `http://127.0.0.1:8000/`
 
 **Why a local server is required:**
 - The app loads CSV files dynamically with `d3.csv()`
@@ -62,15 +39,11 @@ This keeps the application within the coursework requirement of a **single HTML 
 
 ## Data Processing Pipeline
 
-All visual views are derived in-browser from cleaned CSV datasets and fetched geographic data.
-
 **Data sources actively loaded by the application:**
 - `data/cleaned/climate_extreme_weather_cleaned.csv` - Country-level climate events
 - `data/cleaned/world_population_cleaned.csv` - Historical population data
 - World Atlas TopoJSON (fetched from CDN) - Geographic boundaries for map visualization
 
-**Supporting data files** (retained in repo but not directly loaded by app):
-- `data/derived/*.csv` - Pre-aggregated views for reference and documentation
 
 ### Climate dataset processing
 
@@ -98,20 +71,11 @@ The population dataset provides:
 - density and growth rate for extra context
 - historical population columns used to build the global trend chart
 
-### Derived views
-
-From the cleaned files, the loader creates:
-- `countryComparison`: merged country-level metrics for linked charts
-- `regionalImpact`: regional aggregation of affected population and events
-- `populationTrend`: global totals across historical population years
-- `storySummary`: reusable summary facts for KPI cards and narrative text
-- lookup maps for fast country and region queries during interaction
-
 ## Visualisations
 
-The page contains **8 interactive D3 visualizations** that exceed the minimum requirements:
+The page contains **8 interactive D3 visualizations**:
 
-1. **Choropleth World Map** (`js/mapChart.js`): Geographic overview showing average climate risk score by country with color encoding, graticule grid, and interactive legend
+1. **Choropleth World Map** (`js/mapChart.js`): Geographic overview showing average climate risk score by country.
 2. **Line Chart** (`js/lineChart.js`): Global population trend from 1970-2022
 3. **Bubble Scatter Plot** (`js/scatterPlot.js`): Population vs affected population, bubble size = climate risk score, color = continent
 4. **Horizontal Bar Chart** (`js/barChart.js`): Top countries by 2022 population
@@ -222,77 +186,4 @@ The application uses a shared D3 dispatcher and a central interaction controller
 
 - `js/regionChart.js`
   - renders the region aggregation view
-
-## Key Features
-
-### Dynamic KPI Cards
-The application includes 7 dynamic KPI cards that update based on user interactions:
-- **Current focus**: Shows selected country, region, or "All countries" when nothing is selected
-- **Total extreme events**: Total count of extreme weather events in current view
-- **Highest burden region**: Region with largest affected population (updates to show regional detail when filtered)
-- **Largest rank shift**: Country with biggest jump from population rank to climate-impact rank
-- **Most exposed country (by region)**: Country with highest affected-to-population ratio globally or within selected region
-- **Total affected population**: Sum of all people affected by climate events in current filter
-- **Average climate risk**: Mean climate risk score across countries in view
-
-### Number Formatting
-Large numbers are formatted for readability:
-- **Intelligent population formatting**: Values under 1 billion display as millions (e.g., "235.8 million"), values 1 billion and above display as billions (e.g., "1.4 billion")
-- **Consistent decimal precision**: One decimal place for large metrics, appropriate precision for ratios
-- **Contextual units**: Different data types use appropriate units (millions, events, ratios, scores)
-
-### Responsive Transitions
-All charts use smooth D3 transitions that:
-- **Respect user's reduced motion preferences** via CSS media queries
-- **Interrupt ongoing transitions** before starting new ones to prevent conflicts on rapid clicks
-- **Immediate exit removal** prevents element disappearance during fast interactions
-- **Guide attention** during data updates and filtering with coordinated animations
-
-## Maintainability Notes
-
-The codebase is organised around reusable chart modules rather than page-specific script blocks.
-
-Maintainability decisions:
-- each chart owns its rendering logic and exposes `update()` and `setInteractionState()`
-- interaction state is centralised instead of duplicated across charts
-- all numeric parsing happens once in the data loader
-- reusable formatters, transitions, colors, and keyboard bindings are centralised in `js/chartUtils.js`
-- CSS organized with clear section headers and inline comments for easy navigation
-- comprehensive inline documentation explains every component's purpose and behavior
-
-## Code Quality
-
-All JavaScript files follow consistent documentation standards:
-- **File-level docstrings**: Explain the chart's purpose, features, and visual encodings
-- **Constructor comments**: Document initialization and SVG structure setup
-- **Method documentation**: Describe parameters, return values, and side effects
-- **Inline comments**: Explain complex logic, calculations, and data transformations
-
-This makes the codebase accessible for:
-- New team members joining the project
-- Future maintenance and feature additions
-- Demonstration and explanation in presentations
-- Individual report writing with clear code citations
-
-## Rubric Alignment
-
-- **Data processing**: Dynamic loading of CSVs and TopoJSON, robust type parsing, efficient in-memory lookup structures, well-documented data transformation pipeline
-- **Visualisations**: 8 chart types exceeding requirements, including geographic choropleth, creative multivariate heatmap, and analytical slope chart - all with appropriate visual encodings and scalable module architecture
-- **Interactions**: Comprehensive linked filtering and highlighting across all charts, bidirectional region ↔ country navigation, map integration with full interaction system, coordinated tooltips and selections
-- **Design and storytelling**: Single-page guided narrative with 8 chapters, map provides immediate geographic context, clear visual hierarchy, dynamic KPI cards, responsive layout with consistent theming
-- **Quality**: Reusable chart modules, centralized interaction controller, comprehensive inline documentation following Python-style docstrings, production-quality README, graceful error handling
-
-## Map Implementation Details
-
-The world map visualization addresses several technical requirements:
-
-**Data joining**: Country names from the climate dataset are matched with geographic feature properties from the TopoJSON world atlas. Unmatched countries render with neutral gray fill.
-
-**Projection**: Natural Earth projection provides a balanced, undistorted view suitable for global climate patterns.
-
-**Color scale**: Sequential color scheme (YlOrRd) maps climate risk scores to color intensity, with a visible gradient legend showing the scale domain.
-
-**Performance**: Geographic data is fetched once during initialization and cached. The map uses efficient D3 path rendering with minimal DOM manipulation.
-
-**Interaction integration**: Map countries emit the same dispatcher events as other charts, enabling seamless bidirectional linking with scatter plots, bar charts, and heatmap.
 
