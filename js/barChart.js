@@ -1,6 +1,5 @@
 /**
  * Population Bar Chart
- * 
  * Displays top 10 countries ranked by total population.
  * Horizontal bars with inline value labels for easy comparison.
  * Supports hover and click interactions for country selection.
@@ -59,6 +58,11 @@ export default class PopulationBarChart {
     this.lastData = data;
     this.state = { ...state };
     
+    // Interrupt any ongoing transitions to prevent conflicts on rapid updates
+    this.svg.interrupt();
+    this.barLayer.selectAll("*").interrupt();
+    this.labelLayer.selectAll("*").interrupt();
+    
     // Create fresh transition for this update cycle
     const transition = createChartTransition();
 
@@ -108,12 +112,8 @@ export default class PopulationBarChart {
 
     const bars = this.barLayer.selectAll("rect.bar-rect").data(chartData, (d) => d.country);
 
-    bars
-      .exit()
-      .transition(transition)
-      .attr("width", 0)
-      .style("opacity", 0)
-      .remove();
+    // Remove exiting bars immediately to prevent conflicts
+    bars.exit().remove();
 
     const barsEnter = bars
       .enter()
@@ -221,13 +221,14 @@ export default class PopulationBarChart {
   /**
    * Computes responsive dimensions from container bounding box.
    * Returns width, height, and inner dimensions after subtracting margins.
+   * Uses fixed height to prevent vertical expansion on interactions.
    */
   getDimensions() {
     // Get bounding box of container element
     const bounds = this.root.node().getBoundingClientRect();
-    // Set minimum width and height
+    // Set minimum width and use fixed height to prevent stretching
     const width = Math.max(520, bounds.width || 840);
-    const height = Math.max(420, bounds.height || 520);
+    const height = 520; // Fixed height prevents chart expansion
     // Calculate inner dimensions by subtracting margins
     const innerWidth = width - this.margin.left - this.margin.right;
     const innerHeight = height - this.margin.top - this.margin.bottom;
