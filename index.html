@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Climate Change and Population Risk</title>
     <link rel="stylesheet" href="./css/styles.css" />
+    <!-- D3.js v7 library for data visualization -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
   </head>
   <body>
+    <!-- Skip link for keyboard accessibility -->
     <a class="skip-link" href="#main-story">Skip to the story</a>
 
     <div class="page-shell">
+      <!-- Hero Section: Project title, instructions, and reset button -->
       <header class="hero card" id="top">
         <div class="hero-copy">
           <p class="eyebrow">F20DV - Group 4</p>
@@ -21,7 +24,7 @@
             filter by region or country.
           </p>
         </div>
-        
+
         <div class="hero-actions">
           <div class="instruction-row" aria-label="How to use the page">
             <span class="instruction-chip">Hover to inspect</span>
@@ -68,6 +71,7 @@
         <button id="reset-selection" class="reset-btn" type="button">Reset selection</button>
       </div>
 
+      <!-- KPI Cards: Dynamic metrics that update based on user selections -->
       <section class="kpi-grid" aria-label="Story summary">
         <article class="card kpi-card">
           <p class="kpi-label">Current focus</p>
@@ -91,6 +95,24 @@
           <p class="kpi-label">Largest rank shift</p>
           <p id="kpi-shift" class="kpi-value">Loading</p>
           <p class="kpi-note">A top-band chart reveals countries whose climate burden outpaces their population rank.</p>
+        </article>
+
+        <article class="card kpi-card">
+          <p class="kpi-label">Most exposed country</p>
+          <p id="kpi-exposed" class="kpi-value">Loading</p>
+          <p class="kpi-note">Highest affected-to-population ratio shows disproportionate climate burden relative to country size.</p>
+        </article>
+
+        <article class="card kpi-card">
+          <p class="kpi-label">Total affected population</p>
+          <p id="kpi-total-affected" class="kpi-value">Loading</p>
+          <p class="kpi-note">Sum of all people affected by climate events in the current filter or selection.</p>
+        </article>
+
+        <article class="card kpi-card">
+          <p class="kpi-label">Average climate risk</p>
+          <p id="kpi-avg-risk" class="kpi-value">Loading</p>
+          <p class="kpi-note">Mean climate risk score across countries in view, indicating overall severity intensity.</p>
         </article>
       </section>
 
@@ -143,7 +165,7 @@
           </div>
         </section>
 
-         <section class="card story-chapter section-fingerprint" id="chapter-fingerprint" data-chapter="Fingerprint">
+        <section class="card story-chapter section-fingerprint" id="chapter-fingerprint" data-chapter="Fingerprint">
           <div class="section-heading">
             <p class="chapter-kicker">Chapter 4</p>
             <h2>Which countries show the strongest climate fingerprint?</h2>
@@ -224,4 +246,3 @@
     <script type="module" src="./js/main.js"></script>
   </body>
 </html>
-
