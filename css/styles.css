@@ -1,5 +1,12 @@
+/* Import custom typefaces used across the page:
+   - Atkinson Hyperlegible for readable body text
+   - Crimson Pro for editorial-style headings
+   - Fira Code for data labels / UI chips / coded elements */
 @import url("https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Crimson+Pro:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap");
 
+/* Root design tokens:
+   Centralises colours, shadows, radii, and chart palette values.
+   This makes the theme easier to maintain and update consistently. */
 :root {
   --paper: #eef4ef;
   --paper-light: #fbfdfb;
@@ -27,6 +34,7 @@
   --radius-md: 12px;
   --grid-line: rgba(92, 129, 101, 0.12);
 
+  /* Continent colours for map / comparative chart usage */
   --continent-asia: #64846d;
   --continent-europe: #7e9d7c;
   --continent-africa: #b4a273;
@@ -35,20 +43,26 @@
   --continent-oceania: #97aa7d;
   --continent-unknown: #a5b0a8;
 
+  /* Chart-specific colours */
   --bar-population: #6d9172;
   --bar-events: #ada06f;
   --line-trend: #759789;
   --region-bar: #7f9d7d;
 }
 
+/* Apply a predictable sizing model so padding and border
+   are included inside the element's width/height */
 * {
   box-sizing: border-box;
 }
 
+/* Smooth scrolling improves navigation between sections */
 html {
   scroll-behavior: smooth;
 }
 
+/* Main page background:
+   layered gradients create a textured editorial / atlas-like feel */
 body {
   margin: 0;
   min-height: 100vh;
@@ -62,15 +76,20 @@ body {
     linear-gradient(180deg, #fcfefc 0%, var(--paper) 100%);
 }
 
+/* Links inherit text colour so they blend into the visual system
+   unless styled more specifically later */
 a {
   color: inherit;
 }
 
+/* Shared visually-hidden positioning foundation */
 .skip-link,
 .sr-only {
   position: absolute;
 }
 
+/* Skip link improves keyboard accessibility by allowing
+   users to jump directly to the main content */
 .skip-link {
   top: -44px;
   left: 16px;
@@ -82,10 +101,12 @@ a {
   text-decoration: none;
 }
 
+/* Reveal skip link only when focused */
 .skip-link:focus {
   top: 12px;
 }
 
+/* Standard screen-reader-only utility class */
 .sr-only {
   width: 1px;
   height: 1px;
@@ -96,6 +117,8 @@ a {
   border: 0;
 }
 
+/* Main page wrapper:
+   constrains content width and spaces major layout blocks */
 .page-shell {
   width: min(1320px, 100%);
   margin: 0 auto;
@@ -103,6 +126,8 @@ a {
   gap: 24px;
 }
 
+/* Reusable card component:
+   creates soft glassmorphism-style panels with depth */
 .card {
   position: relative;
   overflow: hidden;
@@ -115,6 +140,7 @@ a {
   backdrop-filter: blur(12px);
 }
 
+/* Decorative overlay adds subtle visual richness without affecting content */
 .card::before {
   content: "";
   position: absolute;
@@ -125,6 +151,7 @@ a {
   pointer-events: none;
 }
 
+/* Hero section uses grid so content can adapt easily across breakpoints */
 .hero {
   display: grid;
   grid-template-columns: 1fr;
@@ -133,6 +160,7 @@ a {
   align-items: start;
 }
 
+/* Hero action area spans full width of the grid */
 .hero-actions {
   grid-column: 1 / -1;
   display: grid;
@@ -140,6 +168,7 @@ a {
   padding-top: 6px;
 }
 
+/* Shared small uppercase labels for metadata and UI headings */
 .eyebrow,
 .chapter-kicker,
 .kpi-label {
@@ -150,11 +179,13 @@ a {
   font-weight: 700;
 }
 
+/* Accent colouring for section labels */
 .eyebrow,
 .chapter-kicker {
   color: var(--atlas-blue);
 }
 
+/* Base heading reset */
 h1,
 h2,
 h3 {
@@ -162,11 +193,13 @@ h3 {
   color: var(--ink);
 }
 
+/* Serif headings provide stronger editorial hierarchy */
 h1,
 h2 {
   font-family: "Crimson Pro", Georgia, serif;
 }
 
+/* Large hero title with fluid scaling */
 h1 {
   max-width: 19ch;
   font-size: clamp(2.8rem, 5.7vw, 5rem);
@@ -175,16 +208,19 @@ h1 {
   text-wrap: balance;
 }
 
+/* Section title styling */
 h2 {
   font-size: clamp(1.7rem, 3.5vw, 2.6rem);
   line-height: 1.02;
   max-width: 18ch;
 }
 
+/* Smaller card/panel heading */
 h3 {
   font-size: 1.05rem;
 }
 
+/* Shared paragraph styling for supporting text blocks */
 .intro-text,
 .section-heading p,
 .mini-caption,
@@ -197,11 +233,13 @@ h3 {
   line-height: 1.68;
 }
 
+/* Wider intro text for readable opening copy */
 .intro-text {
   max-width: 62ch;
   font-size: 1.06rem;
 }
 
+/* Decorative drop cap effect for the first letter in intro text */
 .intro-text::first-letter {
   float: left;
   padding-right: 8px;
@@ -211,12 +249,14 @@ h3 {
   color: var(--atlas-red);
 }
 
+/* Horizontal wrapping row for tags/instructions */
 .instruction-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
+/* Shared pill component used for instruction labels and status display */
 .instruction-chip,
 .status-pill {
   display: inline-flex;
@@ -230,11 +270,13 @@ h3 {
   box-shadow: var(--shadow-md);
 }
 
+/* Monospace style reinforces "system" / "coded" feel */
 .instruction-chip {
   font-family: "Fira Code", monospace;
   font-size: 0.8rem;
 }
 
+/* Fixed footer-like metadata control panel */
 .intro-meta {
   position: fixed;
   left: 50%;
@@ -254,6 +296,7 @@ h3 {
   backdrop-filter: blur(14px);
 }
 
+/* Primary action button styling */
 .reset-btn {
   border: 0;
   border-radius: 999px;
@@ -268,10 +311,12 @@ h3 {
   box-shadow: 0 16px 24px rgba(var(--accent-blue-rgb), 0.22);
 }
 
+/* Subtle lift effect on hover */
 .reset-btn:hover {
   transform: translateY(-1px);
 }
 
+/* Truncated status text prevents overflow in narrow areas */
 .status-pill {
   min-width: 0;
   width: 100%;
@@ -282,6 +327,7 @@ h3 {
   white-space: nowrap;
 }
 
+/* Sticky navigation for story sections */
 .story-nav {
   position: sticky;
   top: 10px;
@@ -292,6 +338,7 @@ h3 {
   padding: 10px;
 }
 
+/* Individual story navigation card */
 .story-link {
   display: grid;
   gap: 4px;
@@ -305,6 +352,7 @@ h3 {
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
+/* Hover and active states provide clear interaction feedback */
 .story-link:hover,
 .story-link.is-active {
   transform: translateY(-2px);
@@ -315,34 +363,61 @@ h3 {
   color: var(--ink);
 }
 
+/* Small section index number in nav */
 .story-link-index {
   font-family: "Fira Code", monospace;
   font-size: 0.74rem;
   color: var(--atlas-blue);
 }
 
+/* Main nav label */
 .story-link-label {
   font-family: "Crimson Pro", Georgia, serif;
   font-size: 1.02rem;
   line-height: 1;
 }
 
+/* Flexible KPI card row using wrap for responsiveness */
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
+  max-width: 100%;
 }
 
+/* Each KPI item is allowed to grow/shrink evenly */
+.kpi-grid > * {
+  flex: 1 1 calc(25% - 16px);
+  min-width: 200px;
+}
+
+/* Gradually reduce cards per row as the viewport narrows */
+@media (max-width: 1200px) {
+  .kpi-grid > * {
+    flex: 1 1 calc(33.333% - 16px);
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-grid > * {
+    flex: 1 1 calc(50% - 16px);
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* KPI card structure */
 .kpi-card {
   padding: 18px 20px;
   display: grid;
   gap: 10px;
 }
 
-.kpi-card:first-child {
-  grid-column: span 2;
-}
-
+/* Large KPI numeral/value */
 .kpi-value {
   margin: 0;
   font-family: "Crimson Pro", Georgia, serif;
@@ -351,16 +426,19 @@ h3 {
   color: var(--ink);
 }
 
+/* Wrapper for stacked narrative sections */
 .story-grid {
   display: grid;
   gap: 22px;
 }
 
+/* Main story chapter card */
 .story-chapter {
   padding: 28px 26px;
   isolation: isolate;
 }
 
+/* Coloured accent bar identifies each chapter visually */
 .story-chapter::after {
   content: "";
   position: absolute;
@@ -373,6 +451,7 @@ h3 {
   z-index: 1;
 }
 
+/* Section-specific themes using custom accent colours and subtle backgrounds */
 .section-time-trend {
   --chapter-accent: #6f9676;
   background:
@@ -423,6 +502,7 @@ h3 {
     linear-gradient(180deg, rgba(var(--surface-rgb), 0.92), rgba(var(--surface-muted-rgb), 0.9));
 }
 
+/* Section heading block is layered above decorative backgrounds */
 .section-heading {
   position: relative;
   z-index: 2;
@@ -433,10 +513,12 @@ h3 {
   padding-left: 20px;
 }
 
+/* Constrains heading width for better line breaks */
 .section-heading h2 {
   max-width: 18ch;
 }
 
+/* Pill-style note / annotation component */
 .section-note {
   position: relative;
   z-index: 2;
@@ -448,6 +530,7 @@ h3 {
   background: rgba(var(--surface-rgb), 0.8);
 }
 
+/* Two-column comparison and reflection layouts */
 .comparison-grid,
 .reflection-grid {
   display: grid;
@@ -455,6 +538,7 @@ h3 {
   gap: 18px;
 }
 
+/* Generic panels for charts and side commentary */
 .chart-card,
 .callout-panel {
   display: grid;
@@ -468,16 +552,19 @@ h3 {
   box-shadow: var(--shadow-md);
 }
 
+/* Caption text below/above charts */
 .mini-caption {
   font-size: 0.94rem;
 }
 
+/* Chart wrapper provides fixed minimum space so SVGs / canvases render consistently */
 .chart-container {
   position: relative;
   width: 100%;
   min-height: 340px;
 }
 
+/* Size variants for different data visualisation types */
 .chart-large {
   min-height: 560px;
 }
@@ -494,6 +581,7 @@ h3 {
   min-height: 560px;
 }
 
+/* Highlighted insight box */
 .dynamic-insight {
   margin: 0;
   padding: 22px;
@@ -508,15 +596,18 @@ h3 {
   box-shadow: var(--shadow-md);
 }
 
+/* Callout panel aligns content neatly from the top */
 .callout-panel {
   align-content: start;
 }
 
+/* Serif heading for emphasis inside callout areas */
 .callout-panel h3 {
   font-family: "Crimson Pro", Georgia, serif;
   font-size: 1.55rem;
 }
 
+/* Decorative quotation mark reinforces editorial storytelling */
 .callout-panel::after {
   content: "\"";
   position: absolute;
@@ -528,10 +619,13 @@ h3 {
   color: rgba(var(--accent-blue-rgb), 0.1);
 }
 
+/* Indented bullet list inside callout */
 .callout-list {
   padding-left: 18px;
 }
 
+/* Tooltip used for interactive charts:
+   fixed positioning allows JS to move it with cursor */
 .tooltip {
   position: fixed;
   z-index: 30;
@@ -550,21 +644,25 @@ h3 {
   transition: opacity 0.15s ease;
 }
 
+/* Tooltip becomes visible when JS toggles this class */
 .tooltip.visible {
   opacity: 1;
 }
 
+/* Larger title inside tooltip */
 .tooltip .name {
   margin-bottom: 5px;
   font-family: "Crimson Pro", Georgia, serif;
   font-size: 1.12rem;
 }
 
+/* SVGs should fill their parent chart area */
 .chart-svg {
   width: 100%;
   height: 100%;
 }
 
+/* Axis styling for data visualisations */
 .axis path,
 .axis line {
   stroke: rgba(var(--ink-rgb), 0.18);
@@ -575,6 +673,7 @@ h3 {
   font-size: 11px;
 }
 
+/* Subtle grid lines for chart readability */
 .grid line {
   stroke: var(--grid-line);
 }
@@ -583,6 +682,7 @@ h3 {
   stroke-width: 0;
 }
 
+/* Labels and headings inside visualisations */
 .axis-label,
 .rank-axis-heading {
   fill: var(--ink);
@@ -599,6 +699,7 @@ h3 {
   font-size: 11px;
 }
 
+/* Interactive shapes use pointer cursor to imply hover/click behaviour */
 .dot,
 .bar-rect,
 .region-bar,
@@ -607,12 +708,14 @@ h3 {
   cursor: pointer;
 }
 
+/* Scatterplot-style dot appearance */
 .dot {
   fill-opacity: 0.84;
   stroke: rgba(255, 255, 255, 0.96);
   stroke-width: 1.3;
 }
 
+/* Dimmed state used when filtering or highlighting another datum */
 .dot.dimmed,
 .bar-rect.dimmed,
 .region-bar.dimmed,
@@ -620,6 +723,7 @@ h3 {
   opacity: 0.18;
 }
 
+/* Highlight state increases contrast */
 .dot.highlight,
 .bar-rect.highlight,
 .region-bar.highlight {
@@ -628,18 +732,21 @@ h3 {
   opacity: 1;
 }
 
+/* Trend line styling */
 .line-path {
   fill: none;
   stroke: var(--line-trend);
   stroke-width: 3;
 }
 
+/* Points along line charts */
 .line-point {
   fill: var(--line-trend);
   stroke: #fff;
   stroke-width: 1.2;
 }
 
+/* Text styling for legend and ranking/heatmap labels */
 .legend text,
 .bar-value-label,
 .region-value-label,
@@ -668,15 +775,18 @@ h3 {
   font-size: 11px;
 }
 
+/* Legend itself should not block mouse interaction */
 .legend {
   pointer-events: none;
 }
 
+/* Legend background panel */
 .legend-bg {
   fill: rgba(var(--surface-rgb), 0.94);
   stroke: rgba(var(--ink-rgb), 0.12);
 }
 
+/* Use monospace for numeric / coded values */
 .bar-value-label,
 .region-value-label,
 .rank-rank,
@@ -688,11 +798,13 @@ h3 {
   text-anchor: middle;
 }
 
+/* Wide invisible hit area makes interaction easier on rank graphics */
 .rank-hit-area {
   stroke: transparent;
   stroke-width: 22;
 }
 
+/* Link/path between ranked nodes */
 .rank-link {
   fill: none;
   stroke-width: 3;
@@ -700,22 +812,26 @@ h3 {
   opacity: 0.72;
 }
 
+/* Node marker in rank chart */
 .rank-node {
   stroke: #fff;
   stroke-width: 2;
 }
 
+/* White rank number over coloured nodes */
 .rank-rank {
   fill: #fff;
   font-size: 10px;
   font-weight: 700;
 }
 
+/* Delta text styling */
 .rank-delta {
   font-family: "Fira Code", monospace;
   font-weight: 600;
 }
 
+/* Positive and negative movement colours */
 .rank-delta.positive {
   fill: var(--atlas-teal);
 }
@@ -724,6 +840,7 @@ h3 {
   fill: var(--atlas-red);
 }
 
+/* Enhanced styling for highlighted ranking rows */
 .rank-row.highlight {
   opacity: 1;
 }
@@ -737,6 +854,7 @@ h3 {
   font-weight: 700;
 }
 
+/* Monospace strengthens numeric feel in heatmap labels */
 .heatmap-column-layer text,
 .heatmap-value,
 .heatmap-country-rank {
@@ -754,6 +872,7 @@ h3 {
   font-size: 10px;
 }
 
+/* Divider lines between heatmap rows */
 .heatmap-row-divider {
   stroke: rgba(var(--ink-rgb), 0.08);
   stroke-dasharray: 3 5;
@@ -769,27 +888,32 @@ h3 {
   font-size: 10px;
 }
 
+/* Small dot marker next to country label */
 .heatmap-country-dot {
   stroke: rgba(255, 255, 255, 0.9);
   stroke-width: 1.6;
 }
 
+/* Heatmap cell boundaries */
 .heatmap-cell {
   stroke: rgba(255, 255, 255, 0.95);
   stroke-width: 1.3;
 }
 
+/* Dim state for heatmap filtering */
 .heatmap-cell.dimmed,
 .heatmap-value.dimmed,
 .heatmap-country-label-group.dimmed {
   opacity: 0.18;
 }
 
+/* Highlighted heatmap cell */
 .heatmap-cell.highlight {
   stroke: var(--ink);
   stroke-width: 2.4;
 }
 
+/* When a country row is highlighted, strengthen its labels */
 .heatmap-country-label-group.highlight .heatmap-country-label,
 .heatmap-country-label-group.highlight .heatmap-country-rank {
   font-weight: 700;
@@ -805,17 +929,20 @@ h3 {
   font-size: 10px;
 }
 
+/* Empty chart/fallback message */
 .empty-state {
   fill: var(--ink-soft);
   font-size: 13px;
   text-anchor: middle;
 }
 
+/* Clear keyboard focus visibility for accessibility */
 :focus-visible {
   outline: 3px solid rgba(var(--accent-blue-rgb), 0.62);
   outline-offset: 3px;
 }
 
+/* Tablet / medium desktop responsiveness */
 @media (max-width: 1140px) {
   .hero {
     grid-template-columns: 1fr;
@@ -830,11 +957,13 @@ h3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Make first KPI card more prominent on medium screens */
   .kpi-card:first-child {
     grid-column: span 2;
   }
 }
 
+/* Narrow tablet / mobile layout adjustments */
 @media (max-width: 860px) {
   body {
     padding-inline: 12px;
@@ -851,6 +980,7 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  /* Sticky nav becomes static so it does not dominate small screens */
   .story-nav {
     position: static;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -860,12 +990,14 @@ h3 {
     grid-column: span 1;
   }
 
+  /* Remove left offset spacing when accent bar changes position */
   .section-heading,
   .section-note {
     padding-left: 0;
     margin-left: 0;
   }
 
+  /* Accent bar changes from vertical to horizontal on smaller screens */
   .story-chapter::after {
     top: 0;
     left: 24px;
@@ -883,6 +1015,7 @@ h3 {
   }
 }
 
+/* Small mobile devices */
 @media (max-width: 600px) {
   h1 {
     max-width: 100%;
@@ -912,6 +1045,7 @@ h3 {
     min-width: 180px;
   }
 
+  /* Footer control becomes stacked and narrower */
   .intro-meta {
     width: calc(100vw - 24px);
     bottom: 14px;
@@ -927,6 +1061,7 @@ h3 {
   }
 }
 
+/* Respect users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
